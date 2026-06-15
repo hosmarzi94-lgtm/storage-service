@@ -1,0 +1,28 @@
+from app.filesystem_adapter import FilesystemAdapter
+from app.object_store_adapter import ObjectStoreAdapter
+
+
+class HybridStorageRouter:
+    """Migration router.
+
+    Do not enable this in production until the backfill job and consistency
+    verification are complete. The router currently writes to both backends but
+    reads from the filesystem to preserve current behavior.
+    """
+
+    def __init__(self, local=None, cloud=None):
+        self.local = local or FilesystemAdapter()
+        self.cloud = cloud or ObjectStoreAdapter(bucket="migration-bucket")
+
+    def save(self, key, content):
+        local_result = self.local.save(key, content)
+        cloud_result = self.cloud.save(key, content)
+        return {
+            "backend": "hybrid",
+            "key": key,
+            "status": "saved",
+            "writes": [local_result, cloud_result],
+        }
+
+    def read(self, key):
+        return self.local.read(key)

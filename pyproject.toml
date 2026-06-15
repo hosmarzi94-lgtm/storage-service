@@ -1,0 +1,14 @@
+# Storage Architecture
+
+The service currently routes writes through the filesystem backend. This is the behavior used by existing deployments.
+
+The object store adapter is intended for cloud deployments, but it requires bucket configuration and credential management.
+
+Hybrid storage is part of the migration plan. It should only become the default after:
+
+1. the historical file backfill has completed,
+2. read-after-write consistency has been verified,
+3. rollback procedures have been documented,
+4. object-store credentials are available in production.
+
+Until those conditions are met, the filesystem backend remains the safest default.
